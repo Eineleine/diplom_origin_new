@@ -1,0 +1,1 @@
+2025-09-21 19:52:07: imagepng(temp/qr/ticket_2.png): Failed to open stream: No such file or directory
