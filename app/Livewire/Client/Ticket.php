@@ -28,11 +28,11 @@ class Ticket extends Component
     public function getQR($ticket)
     {
         try {
-            if (!file_exists("temp/qr/ticket_{$ticket->id}.png")) {
-                \QRcode::png($ticket->code, "temp/qr/ticket_{$ticket->id}.png", \QR_ECLEVEL_M, 8, 2);
+            if (!file_exists("temp/ticket_{$ticket->id}.png")) {
+                \QRcode::png($ticket->code, "temp/ticket_{$ticket->id}.png", \QR_ECLEVEL_M, 8, 2);
                 
             }
-            return "temp/qr/ticket_{$ticket->id}.png";
+            return "temp/ticket_{$ticket->id}.png";
         } catch (\Exception $e) {
             return response($e, 500);
         }
