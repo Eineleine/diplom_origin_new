@@ -34,7 +34,24 @@
         <h3 class="movie-seances__hall-title">{{ $hall->title }}</h3>
         <ul class="movie-seances__list">
           @foreach($hall->seances->where('movie_id', $movie->id)->sortBy('start') as $seance)
-          <li class="movie-seances__time-block"><a class="movie-seances__time" href="seance/{{ $seance->id }}?date={{ $week[$chosenDay]->toDateString() }}">{{ $seance->start }}</a></li>
+            @php
+              // Создаем DateTime объекты для сравнения
+              $seanceDateTime = \Carbon\Carbon::parse($week[$chosenDay]->toDateString() . ' ' . $seance->start);
+              $now = \Carbon\Carbon::now();
+              $isPastSeance = $seanceDateTime->lt($now);
+            @endphp
+            
+            <li class="movie-seances__time-block">
+              @if($isPastSeance)
+                <span class="movie-seances__time movie-seances__time_disabled" title="Сеанс уже прошел" style="background-color: dimgrey">
+                  {{ $seance->start }}
+                </span>
+              @else
+                <a class="movie-seances__time" href="seance/{{ $seance->id }}?date={{ $week[$chosenDay]->toDateString() }}">
+                  {{ $seance->start }}
+                </a>
+              @endif
+            </li>
           @endforeach
         </ul>
       </div>

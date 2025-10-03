@@ -11,8 +11,9 @@ use App\Http\Controllers\LoginController;
 
 Route::get('/', Index::class);
 Route::get('/seance/{id}', Hall::class);
-Route::get('/payment', Payment::class);
-Route::get('/ticket', Ticket::class);
+Route::get('/payment', \App\Livewire\Client\Payment::class)->name('payment');
+Route::get('/tickets', \App\Livewire\Client\TicketsShow::class)->name('tickets.show');
+
 
 Route::get('/admin', AdminPage::class)->middleware('auth');
 Route::get('/login', Login::class)->name('login');

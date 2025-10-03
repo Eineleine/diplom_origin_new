@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->unsignedInteger('seance_id');
             $table->unsignedInteger('seat_id');
+            $table->date('seance_date'); 
             $table->unsignedInteger('code')->unique();
             $table->timestamps();
-            $table->unique(['seance_id', 'seat_id']);
+            $table->unique(['seance_id', 'seat_id', 'seance_date']);
         });
+
     }
 
     /**
@@ -26,6 +28,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        
+
         Schema::dropIfExists('tickets');
     }
 };
+

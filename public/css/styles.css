@@ -193,6 +193,11 @@ body {
   margin-right: 4px;
 }
 
+.movie-seances__time_disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .movie .movie-seances__hall .movie-seances__time {
   display: block;
   padding: 8px;

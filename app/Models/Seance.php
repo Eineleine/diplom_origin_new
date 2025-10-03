@@ -28,4 +28,5 @@ class Seance extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+
 }

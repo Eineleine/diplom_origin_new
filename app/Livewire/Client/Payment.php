@@ -13,49 +13,69 @@ use Illuminate\Support\Str;
 class Payment extends Component
 {
     public $seance;
-    public $seats;
-    public $fullPrice;
-    #[Url]
     public $date;
+    public $selectedSeats = [];
+    public $seats;
+    public $fullPrice = 0;
 
     public function mount()
     {
-        if (isset($_GET['seance']) && isset($_GET['seats'])) {
-            $this->seance = Seance::findOrFail($_GET['seance']);
-            $this->seats = array_map(fn($seat) => Seat::findOrFail($seat), $_GET['seats']);
-            $this->fullPrice = array_reduce($this->seats, function ($sum, $seat) {
-                return $sum += $seat->type === 'vip'
-                    ? $seat->hall->price_vip
-                    : $seat->hall->price_standart;
-            }, 0);
+        $this->seance = Seance::findOrFail(request('seance'));
+        $this->date = request('date');
+        $this->selectedSeats = request('seats', []);
+        
+        $this->loadSeats();
+        $this->calculateTotal();
+    }
+
+    public function loadSeats()
+    {
+        $this->seats = Seat::whereIn('id', $this->selectedSeats)->get();
+    }
+
+    public function calculateTotal()
+    {
+        $this->fullPrice = 0;
+        foreach ($this->seats as $seat) {
+            $price = $seat->type === 'vip' ? $this->seance->hall->price_vip : $this->seance->hall->price_standart;
+            $this->fullPrice += $price;
         }
     }
 
     public function buyTickets()
-    {
-        $tickets = [];
-        try {
-            DB::beginTransaction();
-            foreach ($this->seats as $seat) {
-                $tickets[] = Ticket::create([
-                    'seance_id' => $this->seance->id,
-                    'seat_id' => $seat->id,
-                    'code' => $this->makeCode($seat)
-                ]);
-            }
-            DB::commit();
-            $codes = array_map(fn($ticket) => $ticket->code, $tickets);
-            $query = http_build_query(['tickets' => $codes]);
-            redirect('ticket?' . $query);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response($e, 500);
+{
+    try {
+        $ticketIds = [];
+        
+        foreach ($this->selectedSeats as $seatId) {
+            $ticket = Ticket::create([
+                'seance_id' => $this->seance->id,
+                'seat_id' => $seatId,
+                'seance_date' => $this->date,
+                'code' => $this->generateUniqueCode(),
+            ]);
+            
+            $ticketIds[] = $ticket->id;
         }
-    }
 
-    protected function makeCode($seat)
+        return redirect()->route('tickets.show', ['ticket_ids' => implode(',', $ticketIds)]);
+        
+    } catch (\Illuminate\Database\QueryException $e) {
+        if (str_contains($e->getMessage(), 'UNIQUE constraint failed')) {
+            $this->js("alert('Некоторые места уже заняты. Пожалуйста, обновите страницу и выберите другие места.')");
+            return;
+        }
+        throw $e;
+    }
+}
+
+    private function generateUniqueCode()
     {
-        return "SN{$this->seance->id}-R{$seat->row}-S{$seat->seat}-D{$this->date}-" . Str::random(16);
+        do {
+            $code = mt_rand(100000, 999999);
+        } while (Ticket::where('code', $code)->exists());
+
+        return $code;
     }
 
     public function render()

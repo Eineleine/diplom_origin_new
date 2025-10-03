@@ -12,6 +12,7 @@ class Ticket extends Model
         'seance_id',
         'seat_id',
         'code',
+        'seance_date',
     ];
 
     public function seance()
@@ -24,3 +25,5 @@ class Ticket extends Model
         return $this->belongsTo(Seat::class);
     }
 }
+
+

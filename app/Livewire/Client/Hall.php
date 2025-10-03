@@ -24,10 +24,22 @@ class Hall extends Component
             ];
         }
 
-        foreach ($this->seance->tickets as $ticket) {
-            $this->seats[$ticket->seat->row][$ticket->seat->seat]['type'] = 'taken';
+        $occupiedSeats = $this->getOccupiedSeatsForDate();
+        
+        foreach ($occupiedSeats as $ticket) {
+            if (isset($this->seats[$ticket->seat->row][$ticket->seat->seat])) {
+                $this->seats[$ticket->seat->row][$ticket->seat->seat]['type'] = 'taken';
+            }
         }
     }
+
+    private function getOccupiedSeatsForDate()
+{
+    return $this->seance->tickets()
+        ->where('seance_date', $this->date) 
+        ->with('seat')
+        ->get();
+}
 
     public function toggleSelect(int $row, int $seat)
     {
@@ -40,6 +52,7 @@ class Hall extends Component
             $this->seats[$row][$seat]['selected'] = false;
         }
     }
+
     public function confirmBooking()
     {
         $selected = [];
@@ -53,7 +66,11 @@ class Hall extends Component
         if (count($selected) === 0) {
             $this->js("alert('Вы не выбрали места.')");
         } else {
-            $query = http_build_query(['date' => $this->date, 'seance' => $this->seance->id, 'seats' => $selected]);
+            $query = http_build_query([
+                'date' => $this->date, 
+                'seance' => $this->seance->id, 
+                'seats' => $selected
+            ]);
             redirect('payment?' . $query);
         }
     }
@@ -65,6 +82,11 @@ class Hall extends Component
         if ($this->date === '') {
             $this->date = Carbon::now()->toDateString();
         }
+    }
+
+    public function updatedDate()
+    {
+        $this->mapSeats();
     }
 
     public function render()
